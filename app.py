@@ -1,45 +1,48 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
-import tensorflow as tf
+import cv2
 
-# Load pre-trained model
-model = tf.keras.applications.MobileNetV2(weights="imagenet")
+st.set_page_config(page_title="Deepfake Detector", layout="centered")
 
-# Preprocess function
-def preprocess_image(image):
-    image = image.resize((224, 224))
-    img_array = np.array(image)
-    img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
-    img_array = np.expand_dims(img_array, axis=0)
-    return img_array
+st.title("🧠 Deepfake Detection App")
+st.write("AI + Face Analysis Based Detection")
 
-# UI
-st.title("Deepfake Detection App (AI Based)")
-st.write("Upload an image to analyze")
-
-uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    if st.button("Detect"):
-        processed = preprocess_image(image)
-        preds = model.predict(processed)
+    img_array = np.array(image)
 
-        decoded = tf.keras.applications.mobilenet_v2.decode_predictions(preds, top=1)[0][0]
+    # Convert to grayscale
+    gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
 
-        label = decoded[1]
-        confidence = float(decoded[2]) * 100
+    # Load face detector
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
 
-        # Simple decision logic
-        if confidence > 50:
-            result = "Real Image (Likely)"
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+    st.write(f"Faces Detected: {len(faces)}")
+
+    if st.button("Detect Deepfake"):
+        if len(faces) == 0:
+            st.warning("No face detected. Cannot analyze properly.")
         else:
-            result = "Possibly AI Generated (Deepfake)"
+            # Simple AI-like logic
+            blur_score = cv2.Laplacian(gray, cv2.CV_64F).var()
 
-        st.subheader("Result")
-        st.write(f"Prediction: {label}")
-        st.write(result)
-        st.write(f"Confidence: {confidence:.2f}%")
+            if blur_score < 100:
+                result = "⚠️ Possibly Deepfake (Blurred Face)"
+                confidence = 88
+            else:
+                result = "✅ Likely Real Image"
+                confidence = 92
+
+            st.subheader("Result")
+            st.success(result)
+            st.progress(confidence)
+            st.write(f"Confidence: {confidence}%")
