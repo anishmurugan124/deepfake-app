@@ -4,8 +4,8 @@ import numpy as np
 
 st.set_page_config(page_title="Deepfake Detector", layout="centered")
 
-st.title("🧠 Deepfake Detection System (Lite AI)")
-st.markdown("AI-based image forensics analysis")
+st.title("🧠 Deepfake Detection System (Using AI)")
+st.markdown("AI-based image analysis")
 
 uploaded_file = st.file_uploader("📤 Upload Image", type=["jpg","png","jpeg"])
 
