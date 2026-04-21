@@ -34,7 +34,7 @@ if uploaded_file is not None:
                 img_base64 = base64.b64encode(img_buffer.getvalue()).decode("utf-8")
 
                 # Direct REST API call - v1 version
-                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
 
                 payload = {
                     "contents": [{
