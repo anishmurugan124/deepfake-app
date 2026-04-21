@@ -1,10 +1,14 @@
 import streamlit as st
-import numpy as np
 from PIL import Image
-st.markdown("<h1 style='text-align: center; font-weight: bold;'>Deep Fake Detection Using AI</h1>", unsafe_allow_html=True)
+import numpy as np
 
+st.set_page_config(page_title="Deepfake Detector", layout="centered")
 
-# ---------- FEATURE EXTRACTION ----------
+st.title("🧠 Deepfake Detection System (Using AI)")
+st.markdown("AI-based image analysis")
+
+uploaded_file = st.file_uploader("📤 Upload Image", type=["jpg","png","jpeg"])
+
 def extract_features(img):
     gray = np.mean(img, axis=2)
 
@@ -14,25 +18,23 @@ def extract_features(img):
 
     return blur, noise, edges
 
-
-# ---------- PREDICTION ----------
 def predict(blur, noise, edges):
-    score = (blur / 1000) + (noise / 50) + (edges / 10)
+    # weighted scoring
+    score = (blur * 0.5) + (noise * 0.3) + (edges * 0.2)
 
-    if score < 5:
-        return "🚨 Deepfake", 85
-    elif score < 8:
-        return "⚠️ Suspicious", 75
+    # normalized confidence
+    confidence = min(max(int(score / 10), 50), 99)
+
+    if score < 300:
+        return "🚨 Deepfake", confidence
+    elif score < 600:
+        return "⚠️ Suspicious", confidence
     else:
-        return "✅ Real", 90
-
-
-# ---------- UI ----------
-uploaded_file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
+        return "✅ Real", confidence
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image")
+    st.image(image, caption="Uploaded Image", use_column_width=True)
 
     img = np.array(image)
 
@@ -41,21 +43,30 @@ if uploaded_file is not None:
         blur, noise, edges = extract_features(img)
         result, confidence = predict(blur, noise, edges)
 
-        st.subheader("Analysis Report")
+        st.subheader("📊 Result")
 
-st.markdown(f"""
-- Image clarity (blur) analyzed  
-- Noise pattern evaluated  
-- Edge consistency checked  
+        if "Real" in result:
+            st.success(result)
+        elif "Suspicious" in result:
+            st.warning(result)
+        else:
+            st.error(result)
 
-**Final Decision:** {result}  
-**Confidence:** {confidence}%
-""")
-        # DEBUG (optional)
+        st.progress(confidence)
+
+        # metrics
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Blur", f"{blur:.2f}")
+        col2.metric("Noise", f"{noise:.2f}")
+        col3.metric("Edges", f"{edges:.2f}")
+
         st.markdown("---")
+        st.markdown("### 📄 Analysis Report")
 
-st.subheader("Detailed Metrics")
-
-st.write(f"Blur: {blur:.2f}")
-st.write(f"Noise: {noise:.2f}")
-st.write(f"Edges: {edges:.2f}")
+        st.write(f"""
+        - Image clarity (blur) analyzed  
+        - Noise pattern evaluated  
+        - Edge consistency checked  
+        - Final Decision: **{result}**  
+        - Confidence: **{confidence}%**
+        """)
