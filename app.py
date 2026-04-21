@@ -1,9 +1,9 @@
 import streamlit as st
-import google.generativeai as genai
-import base64
 import json
 from PIL import Image
 import io
+import requests
+import base64
 
 st.set_page_config(page_title="Deepfake Detector", page_icon="🧠", layout="centered")
 
@@ -11,12 +11,11 @@ st.markdown("""
 <style>
     .stApp { background-color: #020408; color: #00ff88; }
     h1 { color: #00ff88 !important; font-family: monospace; text-align: center; }
-    .subtitle { text-align: center; color: #00ff8877; font-size: 0.8rem; letter-spacing: 3px; margin-bottom: 30px; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🧠 DEEPFAKE.SCAN")
-st.markdown('<p class="subtitle">AI VISION ANALYSIS • GEMINI POWERED • FREE</p>', unsafe_allow_html=True)
+st.markdown("AI VISION ANALYSIS • GEMINI POWERED • FREE")
 
 api_key = st.text_input("🔑 Gemini API Key", type="password", placeholder="AIza...")
 
@@ -29,58 +28,75 @@ if uploaded_file is not None:
     if st.button("🔍 Analyze Image", disabled=not api_key):
         with st.spinner("🤖 AI Analysis in progress..."):
             try:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel("gemini-2.0-flash")
-
+                # Image to base64
                 img_buffer = io.BytesIO()
                 image.convert("RGB").save(img_buffer, format="JPEG")
-                img_bytes = img_buffer.getvalue()
+                img_base64 = base64.b64encode(img_buffer.getvalue()).decode("utf-8")
 
-                prompt = """You are a deepfake detection expert. Analyze this image carefully.
+                # Direct REST API call - v1 version
+                url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {
+                                "text": """You are a deepfake detection expert. Analyze this image.
 Return ONLY valid JSON, no extra text:
 {
   "verdict": "REAL" or "FAKE" or "SUSPICIOUS",
   "confidence": <number 50-99>,
   "reasons": ["reason 1", "reason 2", "reason 3"],
   "summary": "2-3 sentence analysis"
-}
-Check for: unnatural skin, face blurring, lighting issues, GAN artifacts, hair artifacts, eye reflections."""
+}"""
+                            },
+                            {
+                                "inline_data": {
+                                    "mime_type": "image/jpeg",
+                                    "data": img_base64
+                                }
+                            }
+                        ]
+                    }]
+                }
 
-                response = model.generate_content([
-                    prompt,
-                    {"mime_type": "image/jpeg", "data": img_bytes}
-                ])
+                response = requests.post(url, json=payload)
+                data = response.json()
 
-                clean = response.text.replace("```json", "").replace("```", "").strip()
-                result = json.loads(clean)
-
-                verdict = result.get("verdict", "UNKNOWN")
-                confidence = result.get("confidence", 0)
-                reasons = result.get("reasons", [])
-                summary = result.get("summary", "")
-
-                st.subheader("📊 Analysis Result")
-
-                if verdict == "REAL":
-                    st.success("✅ AUTHENTIC IMAGE")
-                elif verdict == "FAKE":
-                    st.error("🚨 DEEPFAKE DETECTED")
+                if "error" in data:
+                    st.error(f"API Error: {data['error']['message']}")
                 else:
-                    st.warning("⚠️ SUSPICIOUS IMAGE")
+                    text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    clean = text.replace("```json", "").replace("```", "").strip()
+                    result = json.loads(clean)
 
-                st.progress(confidence)
-                st.write(f"**Confidence:** {confidence}%")
+                    verdict = result.get("verdict", "UNKNOWN")
+                    confidence = result.get("confidence", 0)
+                    reasons = result.get("reasons", [])
+                    summary = result.get("summary", "")
 
-                st.markdown("**🔎 Detection Reasons:**")
-                for reason in reasons:
-                    st.write(f"› {reason}")
+                    st.subheader("📊 Analysis Result")
 
-                st.markdown("**📝 Summary:**")
-                st.write(summary)
+                    if verdict == "REAL":
+                        st.success("✅ AUTHENTIC IMAGE")
+                    elif verdict == "FAKE":
+                        st.error("🚨 DEEPFAKE DETECTED")
+                    else:
+                        st.warning("⚠️ SUSPICIOUS IMAGE")
+
+                    st.progress(confidence)
+                    st.write(f"**Confidence:** {confidence}%")
+
+                    st.markdown("**🔎 Detection Reasons:**")
+                    for reason in reasons:
+                        st.write(f"› {reason}")
+
+                    st.markdown("**📝 Summary:**")
+                    st.write(summary)
 
             except json.JSONDecodeError:
                 st.error("Response parsing error. Please try again.")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
     elif not api_key:
         st.info("👆 Please enter your Gemini API Key above")
