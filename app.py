@@ -7,13 +7,6 @@ import base64
 
 st.set_page_config(page_title="Deepfake Detector", page_icon="🧠", layout="centered")
 
-st.markdown("""
-<style>
-    .stApp { background-color: #020408; color: #00ff88; }
-    h1 { color: #00ff88 !important; font-family: monospace; text-align: center; }
-</style>
-""", unsafe_allow_html=True)
-
 st.title("🧠 DEEPFAKE.SCAN")
 st.markdown("AI VISION ANALYSIS • GEMINI POWERED • FREE")
 
@@ -28,12 +21,10 @@ if uploaded_file is not None:
     if st.button("🔍 Analyze Image", disabled=not api_key):
         with st.spinner("🤖 AI Analysis in progress..."):
             try:
-                # Image to base64
                 img_buffer = io.BytesIO()
                 image.convert("RGB").save(img_buffer, format="JPEG")
                 img_base64 = base64.b64encode(img_buffer.getvalue()).decode("utf-8")
 
-                # Direct REST API call - v1 version
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
 
                 payload = {
