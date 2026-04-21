@@ -30,7 +30,7 @@ if uploaded_file is not None:
         with st.spinner("🤖 AI Analysis in progress..."):
             try:
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel("gemini-1.5-flash-latest")
+                model = genai.GenerativeModel("gemini-2.0-flash")
 
                 img_buffer = io.BytesIO()
                 image.convert("RGB").save(img_buffer, format="JPEG")
