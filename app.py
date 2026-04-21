@@ -51,8 +51,7 @@ if uploaded_file is not None:
             st.warning(result)
         else:
             st.error(result)
-
-        st.progress(confidence)
+     st.progress(confidence)
 
         # metrics
         col1, col2, col3 = st.columns(3)
