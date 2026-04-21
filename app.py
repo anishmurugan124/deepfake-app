@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
+st.markdown("<h1 style='text-align: center; font-weight: bold;'>Deep Fake Detection Using AI</h1>", unsafe_allow_html=True)
 
-st.title("Deepfake Detection App")
-st.write("Hello Anish 👋")
 
 # ---------- FEATURE EXTRACTION ----------
 def extract_features(img):
@@ -42,18 +41,21 @@ if uploaded_file is not None:
         blur, noise, edges = extract_features(img)
         result, confidence = predict(blur, noise, edges)
 
-        st.subheader("Result")
+        st.subheader("Analysis Report")
 
-        if "Real" in result:
-            st.success(result)
-        elif "Suspicious" in result:
-            st.warning(result)
-        else:
-            st.error(result)
+st.markdown(f"""
+- Image clarity (blur) analyzed  
+- Noise pattern evaluated  
+- Edge consistency checked  
 
-        st.progress(confidence)
-
+**Final Decision:** {result}  
+**Confidence:** {confidence}%
+""")
         # DEBUG (optional)
-        st.write(f"Blur: {blur:.2f}")
-        st.write(f"Noise: {noise:.2f}")
-        st.write(f"Edges: {edges:.2f}")
+        st.markdown("---")
+
+st.subheader("Detailed Metrics")
+
+st.write(f"Blur: {blur:.2f}")
+st.write(f"Noise: {noise:.2f}")
+st.write(f"Edges: {edges:.2f}")
