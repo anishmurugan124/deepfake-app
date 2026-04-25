@@ -28,7 +28,7 @@ uploaded_file = st.file_uploader("📤 Upload Image", type=["jpg","png","jpeg"])
 
 if uploaded_file:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+    st.image(image, caption="Uploaded Image", width=600))
 
     if st.button("🔍 Analyze Image"):
         with st.spinner("Analyzing..."):
