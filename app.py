@@ -16,7 +16,7 @@ def load_model():
     if not os.path.exists(MODEL_PATH):
         with st.spinner("Model downloading..."):
             gdown.download(
-                "https://drive.google.com/uc?id=https://drive.google.com/file/d/1oi3NdmhE5GayQhNsxMW0e74gWtPIp7ei/view?usp=drive_link",
+                "https://drive.google.com/uc?id=1oi3NdmhE5GayQhNsxMW0e74gWtPIp7ei",
                 MODEL_PATH, quiet=False
             )
     return tf.keras.models.load_model(MODEL_PATH)
